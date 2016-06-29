@@ -11,6 +11,7 @@ angular.module('app.controllers', [])
             $scope.index = $stateParams.itemId;
 
         }])
+
     .controller('ListCtrl', [
         '$state', '$scope', 'UserService',   // <-- controller dependencies
         function ($state, $scope, UserService) {
@@ -55,11 +56,19 @@ angular.module('app.controllers', [])
 			  		console.log('Got pos', pos);
 			  		$scope.map.setCenter(new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
 			  		$scope.loading.hide();
+			  		console.log (pos.coords.latitude);
+			    	//var marker = new google.maps.Marker({
+			        //	map: $scope.map,
+			        //	position: new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude)
+			      	//});
+			       	//$scope.markers.push(marker);
 				}, function (error) {
 			  		alert('Unable to get location: ' + error.message);
 				});
-		  };
-	}])
+
+
+			};
+		}])
 
 
     .controller('AccountCtrl', [
@@ -72,7 +81,7 @@ angular.module('app.controllers', [])
             });
 
 
-    }])
+    	}])
 
 	.controller('SearchCtrl', [
 		'$scope','AppService',
@@ -108,19 +117,35 @@ angular.module('app.controllers', [])
 		  	};
 
 		  	$scope.locateUsers = function(){
-				//alert($scope.bloodType);
 				AppService.getUserLocationByBloodType($scope.bloodType)
 				   .then(function (_response) {
 						// transition to next state
-						//alert(_response);
-						for(var i=0, len=_response.length; i<len; i++) {
-							var user_loc = _response[i].get("location");
-							//alert(user_loc);
+						//uiGmapIsReady.promise().then(function (){});
+						var geocoder = new google.maps.Geocoder();
+						var marker;
+						var latlng;
 
+
+						var user_loc;
+						var location;
+						for(var i=0, len=_response.length; i<len; i++) {
+							user_loc = _response[i].get("location");
+							//alert(user_loc);
+							geocoder.geocode( { 'address': user_loc}, function(results, status) {
+								location = results[0].geometry.location;
+								console.log(location.lat() + '    ' + location.lng());
+					            latlng = new google.maps.LatLng(location.lat(), location.lng());
+					            marker = new google.maps.Marker({
+					                position: new google.maps.LatLng(location.lat(), location.lng()),
+					                map: $scope.map
+								});
+
+            					//$scope.markers.push(marker);
+							});
 						}
 					}, function (_error) {
 						alert("error logging in " + _error.debug);
 					})
 			};
 
-	}]);
+		}]);
